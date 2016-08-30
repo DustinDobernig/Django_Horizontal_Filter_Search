@@ -135,7 +135,9 @@ Requires jQuery, core.js, and SelectBox.js.
             addEvent(filter_input, 'keypress', function(e) { SelectFilter.filter_key_press(e, field_id); });
             addEvent(filter_input, 'keyup', function(e) { SelectFilter.filter_key_up(e, field_id); });
             addEvent(filter_input, 'keydown', function(e) { SelectFilter.filter_key_down(e, field_id); });
+            addEvent(filter_input_chosen, 'keypress', function(e) { SelectFilter.filter_key_press_chosen(e, field_id); });
             addEvent(filter_input_chosen, 'keyup', function(e) { SelectFilter.filter_key_up_chosen(e, field_id); });
+            addEvent(filter_input_chosen, 'keydown', function(e) { SelectFilter.filter_key_down_chosen(e, field_id); });
             addEvent(selector_div, 'change', function(e) {
                 if (e.target.tagName === 'SELECT') {
                     SelectFilter.refresh_icons(field_id);
@@ -215,14 +217,7 @@ Requires jQuery, core.js, and SelectBox.js.
             from.selectedIndex = temp;
             return true;
         },
-        filter_key_up_chosen: function(event, field_id) {
-        var to = document.getElementById(field_id + '_to');
-        var temp = to.selectedIndex;
-        SelectBox.filter(field_id + '_to', document.getElementById(field_id + '_input_chosen').value);
-        from.selectedIndex = temp;
-        return true;
-         },
-        filter_key_down: function(event, field_id) {
+         filter_key_down: function(event, field_id) {
             var from = document.getElementById(field_id + '_from');
             // right arrow -- move across
             if ((event.which && event.which === 39) || (event.keyCode && event.keyCode === 39)) {
@@ -240,9 +235,45 @@ Requires jQuery, core.js, and SelectBox.js.
                 from.selectedIndex = (from.selectedIndex === 0) ? from.length - 1 : from.selectedIndex - 1;
             }
             return true;
+        },
+        filter_key_press_chosen: function(event, field_id) {
+            var to = document.getElementById(field_id + '_to');
+            // don't submit form if user pressed Enter
+            if ((event.which && event.which === 13) || (event.keyCode && event.keyCode === 13)) {
+                from.selectedIndex = 1;
+                SelectBox.move(field_id + '_to', field_id + '_from');
+                from.selectedIndex = 1;
+                event.preventDefault();
+                return false;
+            }
+        },
+        filter_key_up_chosen: function(event, field_id) {
+        var to = document.getElementById(field_id + '_to');
+        var temp = to.selectedIndex;
+        SelectBox.filter(field_id + '_to', document.getElementById(field_id + '_input_chosen').value);
+        to.selectedIndex = temp;
+        return true;
+         },
+        filter_key_down_chosen: function(event, field_id) {
+            var to = document.getElementById(field_id + '_to');
+            // left arrow -- move across
+            if ((event.which && event.which === 37) || (event.keyCode && event.keyCode === 37)) {
+                var old_index = to.selectedIndex;
+                SelectBox.move(field_id + '_to', field_id + '_from');
+                to.selectedIndex = (old_index === to.length) ? to.length - 0 : old_index;
+                return false;
+            }
+            // down arrow -- wrap around
+            if ((event.which && event.which === 40) || (event.keyCode && event.keyCode === 40)) {
+                to.selectedIndex = (to.length === to.selectedIndex + 1) ? 0 : to.selectedIndex + 1;
+            }
+            // up arrow -- wrap around
+            if ((event.which && event.which === 38) || (event.keyCode && event.keyCode === 38)) {
+                to.selectedIndex = (to.selectedIndex === 0) ? to.length - 1 : to.selectedIndex - 1;
+            }
+            return true;
         }
     };
-
     addEvent(window, 'load', function(e) {
         $('select.selectfilter, select.selectfilterstacked').each(function() {
             var $el = $(this),
